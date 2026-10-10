@@ -1,0 +1,32 @@
+name: Sync Upstream Daily
+
+on:
+  schedule:
+    # 매일 새벽 4시(한국 시간)에 실행하도록 설정
+    - cron: '0 19 * * *'
+  workflow_dispatch: # 필요할 때 수동 업데이트
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Sync Upstream
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          target_sync_branch: main
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_branch: main
+          upstream_sync_repo: alam00000/bentopdf # 원본 저장소 주소
+
+      - name: Sync Check
+        if: failure()
+        run: |
+          echo "[Error] 동기화 중 충돌(Conflict)이 발생했거나 오류가 있습니다. 수동 확인이 필요합니다."
+          exit 1
